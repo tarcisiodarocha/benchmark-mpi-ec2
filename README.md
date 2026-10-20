@@ -177,3 +177,28 @@ cat tempo-1-r1.txt tempo-2-r1.txt tempo-3-r1.txt
 `user` e `sys` descrevem o consumo de CPU observado pelo comando no controle e seus descendentes locais. **Não representam a soma de CPU consumida nos workers remotos.** Por isso, o ganho entre instâncias deve ser avaliado pelo tempo `real`.
 
 Para ver o tempo diretamente no terminal, em vez de salvá-lo, basta remover `-o tempo-N-r1.txt`. Também pode usar a palavra-chave do Bash `time -p mpirun ...`; o caminho `/usr/bin/time` facilita salvar as medidas com `-o`.
+
+## Parâmetros do comando mpirun
+
+| Parâmetro | Explicação |
+|---|---|
+| `--mca plm_rsh_no_tree_spawn 1` | Desativa o lançamento SSH em árvore no Open MPI 4.1.x: o controle inicia os processos remotos, dispensando SSH de um worker para outro. |
+| `--hostfile hosts-1` | Seleciona o arquivo com os workers permitidos e seus slots. Use `hosts-2` ou `hosts-3` nas outras configurações. |
+| `-np 2` | Define o total de processos MPI: 2, 4 ou 6 neste exemplo. |
+| `--map-by ppr:2:node` | Distribui dois processos por nó de trabalho; `ppr` significa processos por recurso e `node` é o recurso escolhido. |
+| `--rank-by slot` | Numera os ranks consecutivamente nos slots de cada nó; com este mapeamento, o worker 1 recebe os ranks 0 e 1. |
+| `--bind-to none` | Não fixa os processos em CPUs específicas; permite que o sistema operacional os escalone. |
+| `--nooversubscribe` | Impede iniciar mais processos que os slots disponíveis nos nós. |
+| `--wdir /home/ubuntu/mpi-bilateral` | Define o diretório de trabalho dos processos nos workers. Esse diretório deve existir. |
+
+Depois dessas opções vem o executável `/home/ubuntu/mpi-bilateral/bilateral`. Os argumentos seguintes são recebidos pelo **programa C**:
+
+| Argumento | Explicação |
+|---|---|
+| `12` | Raio da vizinhança do filtro: até 12 pixels em cada direção, formando uma janela de 25 × 25. |
+| `6` | Sigma espacial: controla quanto o peso diminui com a distância entre pixels. |
+| `30` | Sigma de intensidade: controla quanto o peso diminui com a diferença entre os tons de cinza. |
+| `/home/ubuntu/mpi-bilateral/saida-1` | Pasta onde o rank 0 grava as imagens filtradas; varia para `saida-2` ou `saida-3` conforme a execução. |
+| Caminhos terminados em `01.pgm`, `06.pgm` e `12.pgm` | Imagens de entrada que compõem o pacote a processar. |
+
+As opções `-p` e `-o tempo-N-r1.txt`, antes de `mpirun`, pertencem ao `/usr/bin/time`: selecionam o formato das medidas e o arquivo onde serão salvas.
